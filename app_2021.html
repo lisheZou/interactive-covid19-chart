@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+    <style type="text/css">
+      a:link {
+        color: blue;
+        background-color: transparent;
+        text-decoration: none;
+      }
+      a:visited {
+        color: blue;
+        background-color: transparent;
+        text-decoration: none;
+      }
+      a:hover {
+        color: red;
+        background-color: transparent;
+        text-decoration: underline;
+      }
+      a:active {
+        color: red;
+        background-color: transparent;
+        text-decoration: underline;
+      }
+      </style>
+<head>
+  <script src="https://d3js.org/d3.v4.js"></script>
+  <script src="https://rawgit.com/susielu/d3-annotation/master/d3-annotation.min.js"></script>
+</head>
+
+<body>
+  <h1>COVID-19 Weekly New Cases Line Chart (2021)</h1>
+  <h3 style="color: #69b3a2;">Interactive Timeline of Events Related to the COVID-19 Pandemic</h3>
+  <!-- Create a div where the graph will take place -->
+  <div id="line_chart"></div>
+  <div class="page of year">
+    <ul>
+      <a href="app_2020.html">Previous Year</a>
+      <p style="display:inline">2020</p>
+      <p style="display:inline; background-color:aquamarine">2021</p>
+      <p style="display:inline">2022</p>
+      <p style="display:inline">2023</p>
+      <a href="app_2022.html">Next Year</a>
+    </ul>
+</div>
+</body>
+
+<script>
+
+// set the dimensions and margins of the graph
+var margin = {top: 30, right: 60, bottom: 30, left: 100},
+    width = 1400 - margin.left - margin.right,
+    height = 600 - margin.top - margin.bottom;
+
+// append the svg object to the body of the page
+var svg = d3.select("#line_chart")
+  .append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform",
+          "translate(" + margin.left + "," + margin.top + ")");
+//Read the data
+d3.csv("2021_cases.csv",
+  // When reading the csv, I must format variables:
+  function(d){
+    return { date : d3.timeParse("%Y-%m-%d")(d.date), value : d.World }
+  },
+
+  // Now I can use this dataset:
+  function(data) {
+    // Add X axis --> it is a date format
+    var x = d3.scaleTime()
+      .domain(d3.extent(data, function(d) { return d.date; }))
+      .range([ 0, width ]);
+    svg.append("g")
+      .attr("transform", "translate(0," + height + ")")
+      .call(d3.axisBottom(x));
+
+    // Add Y axis
+    var y = d3.scaleLinear()
+      .domain([0, d3.max(data, function(d) { return +d.value; })])
+      .range([ height, 0 ]);
+    svg.append("g")
+      .call(d3.axisLeft(y));
+
+    // Add the line
+    svg.append("path")
+      .datum(data)
+      .attr("fill", "none")
+      .attr("stroke", "steelblue")
+      .attr("stroke-width", 1.5)
+      .attr("d", d3.line()
+        .x(function(d) { return x(d.date) })
+        .y(function(d) { return y(d.value) })
+        )
+
+})
+//add a circle at certain position
+function drawCircle(x, y, id) {
+        svg.append("circle")
+          .attr('id',id)
+          .attr('class', 'click-circle')
+          .attr("cx", x)
+          .attr("cy", y)
+          .attr("r", 10)
+          .style("fill","#69b3a2")
+          ;
+    }
+//add annotation with mouse hover 
+function my_annotation(x1,y1,dx1,dy1,id,my_label, my_title){
+  const annotations = [
+    {
+      note: {
+        label: my_label,
+        title: my_title,
+        align: "left",  // try right or left
+        wrap: 200,  // try something smaller to see text split in several lines
+        padding: 5   // More = text lower
+      },
+      color: ["#69b3a2"],
+      x: x1,
+      y: y1,
+      dy: dy1,
+      dx: dx1
+    }
+  ]
+  // Add annotation to the chart
+  const makeAnnotations = d3.annotation()
+    .annotations(annotations)
+  svg.append("g")
+    .attr("id", "anno"+id)
+    .call(makeAnnotations)
+  circle_id = "circle"+id
+  drawCircle(x1,y1,circle_id)
+  document.getElementById("anno"+id).style.visibility = "hidden";
+  d3.select("#circle"+id)
+  .on ("mouseover", function(){
+    document.getElementById("anno"+id).style.visibility = "visible";
+  })
+  .on("mouseout", function(){
+          d3.select(this)
+          document.getElementById("anno"+id).style.visibility = "hidden";
+      })
+
+
+}
+
+date_1 = "01-15-2021",
+info_1 = "New COVID-19 variants are reported in the US and across the global",
+my_annotation(30,195,50,-50,"1",info_1,date_1)
+
+date_2 = "04-17-2020",
+info_2 = "The global tally of deaths from Covid-19 surpasses 3 million, according to data compiled by Johns Hopkins.",
+my_annotation(370,170,30,-70,"2",info_2,date_2)
+
+date_4 = "05-27-2020",
+info_4 = "Data collected by Johns Hopkins University reports that the coronavirus has killed more than 100,000 people across the US",
+my_annotation(490,265,70,-70,"4",info_4,date_4)
+
+date_5 = "11-03-2020",
+info_5 = "WHO declares Omicron variant of COVID-19 a 'variant of concern'.",
+my_annotation(1040,325,-70,70,"5",info_5,date_5)
+
+date_6 = "11-26-2020",
+info_6 = "Booster mRNA vaccines are approved for everyone ages more than 18 or older.",
+my_annotation(1130,265,-30,70,"6",info_6,date_6)
+
+
+
+
+
+</script>
